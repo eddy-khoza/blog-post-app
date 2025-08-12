@@ -1,15 +1,13 @@
-import { PostService } from './../../service/post.service';
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { PostService } from '../../service/post.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-create-post',
@@ -20,65 +18,51 @@ import { MatButtonModule } from '@angular/material/button';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatChipsModule,
-    MatIconModule,
     MatButtonModule
   ],
   templateUrl: './create-post.component.html',
-  styleUrl: './create-post.component.scss'
+  styleUrls: ['./create-post.component.scss']
 })
-export class CreatePostComponent implements OnInit {
-  postForm!: FormGroup;
-  tags: string[] = [];
+export class CreatePostComponent {
+  postForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
+    private postService: PostService,
     private router: Router,
-    private snackbar: MatSnackBar,
-    private postService: PostService
-  ) {}
-
-  ngOnInit() {
+    private snackBar: MatSnackBar
+  ) {
     this.postForm = this.fb.group({
-      name: [null, Validators.required],
-      content: [null, [Validators.required, Validators.maxLength(5000)]],
-      img: [null, Validators.required],
-      postedBy: [null, Validators.required],
+      title: ['', [Validators.required, Validators.maxLength(50)]],
+      content: ['', [Validators.required, Validators.maxLength(250)]],
     });
-  }
-
-  add(event: any) {
-    const value = (event.value || '').trim();
-    if (value) {
-      this.tags.push(value);
-    }
-    event.chipInput!.clear();
-  }
-
-  remove(tag: any) {
-    const index = this.tags.indexOf(tag);
-    if (index >= 0) {
-      this.tags.splice(index, 1);
-    }
   }
 
   onSubmit() {
     if (this.postForm.valid) {
-      const data = this.postForm.value;
-      data.tags = this.tags;
-
-      this.postService.createNewPost(data).subscribe(
-        (res) => {
-          console.log(res);
-          this.snackbar.open('Post created successfully!', 'Close', {
-            duration: 3000
-          });
-          this.router.navigate(['/']);
+      this.postService.createPost(this.postForm.value).subscribe({
+        next: () => {
+          this.snackBar.open('Post created successfully!', 'Close', { duration: 3000 });
+          this.router.navigate(['/view-all-posts']);
         },
-        (error) => {
-          this.snackbar.open("Something went wrong during post submission", 'Close');
+        error: (err) => {
+          console.error('Error creating post:', err);
+          this.snackBar.open('Error creating post. Please try again.', 'Close', { 
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
         }
-      );
+      });
     }
+  }
+  
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 }

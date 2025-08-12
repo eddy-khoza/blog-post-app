@@ -2,7 +2,6 @@ package com.eddy.BlogPostApp.Entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.util.Date;
 import java.util.List;
 
@@ -13,21 +12,30 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Column(length = 50, nullable = false)
+    private String title;
 
-    @Column(length = 5000)
+    @Column(length = 250, nullable = false)
     private String content;
+
+    @Column(nullable = false)
     private String postedBy;
-    private String img;
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date date;
+    @Column(nullable = false)
+    private Date createdAt;
 
-    private int linkCount;
-    private int viewCount;
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer linkCount = 0;
 
-    @ElementCollection
-    @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"))
-    @Column(name = "tag")
-    private List<String> tags;
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer viewCount = 0;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
+
+    public boolean isEditable() {
+        long FIFTEEN_MINUTES = 15 * 60 * 1000;
+        return (new Date().getTime() - this.createdAt.getTime()) < FIFTEEN_MINUTES;
+    }
 }

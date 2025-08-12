@@ -16,14 +16,14 @@ import { CommonModule } from '@angular/common';
     MatButtonModule,
     MatPaginatorModule
   ],
-  selector: 'app-view-all-posts',
-  templateUrl: './view-all-posts.component.html',
-  styleUrls: ['./view-all-posts.component.scss']
+  selector: 'app-user-posts',
+  templateUrl: './user-posts.component.html',
+  styleUrls: ['./user-posts.component.scss']
 })
-export class ViewAllPostsComponent implements OnInit {
+export class UserPostsComponent implements OnInit {
   posts: any[] = [];
   totalPosts = 0;
-  pageSize = 25;
+  pageSize = 5;
   pageIndex = 0;
   isLoading = false;
 
@@ -34,22 +34,32 @@ export class ViewAllPostsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.loadPosts();
+    this.loadUserPosts();
   }
 
-  loadPosts() {
+  loadUserPosts() {
     this.isLoading = true;
-    this.postService.getAllPosts(this.pageIndex, this.pageSize).subscribe({
+    this.postService.getUserPosts(this.pageIndex, this.pageSize).subscribe({
       next: (res: any) => {
         this.posts = res.content;
         this.totalPosts = res.totalElements;
         this.isLoading = false;
       },
       error: (err: any) => {
-        this.snackBar.open('Error loading posts', 'Close', { duration: 3000 });
+        this.snackBar.open('Error loading your posts', 'Close', { duration: 3000 });
         this.isLoading = false;
       }
     });
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadUserPosts();
+  }
+
+  viewPost(id: number) {
+    this.router.navigate(['/post', id]);
   }
 
   deletePost(id: number) {
@@ -57,25 +67,12 @@ export class ViewAllPostsComponent implements OnInit {
       this.postService.deletePost(id).subscribe({
         next: () => {
           this.snackBar.open('Post deleted successfully', 'Close', { duration: 3000 });
-          if (this.posts.length === 1 && this.pageIndex > 0) {
-            this.pageIndex--;
-          }
-          this.loadPosts();
+          this.loadUserPosts();
         },
         error: (err: any) => {
-          this.snackBar.open('Error deleting post: ' + err.message, 'Close', { duration: 5000 });
+          this.snackBar.open('Error deleting post: ' + err.message, 'Close');
         }
       });
     }
-  }
-
-  onPageChange(event: PageEvent) {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.loadPosts();
-  }
-
-  viewPost(id: number) {
-    this.router.navigate(['/post', id]);
   }
 }

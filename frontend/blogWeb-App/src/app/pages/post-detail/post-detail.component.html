@@ -1,0 +1,50 @@
+<mat-card *ngIf="post" class="post-card">
+    <mat-card-header>
+      <mat-card-title>{{ post.title }}</mat-card-title>
+      <mat-card-subtitle>
+        Posted by: {{ post.postedBy }} | 
+        Posted on: {{ post.createdAt | date:'medium' }}
+      </mat-card-subtitle>
+    </mat-card-header>
+  
+    <mat-card-content>
+      <div *ngIf="!isEditable">
+        <p>{{ post.content }}</p>
+        <button mat-button *ngIf="isEditable" (click)="isEditing = true">EDIT</button>
+      </div>
+      
+      <div *ngIf="isEditable">
+        <mat-form-field appearance="fill" class="full-width">
+          <textarea matInput [(ngModel)]="editedContent" rows="5"></textarea>
+        </mat-form-field>
+        <div>
+          <button mat-button (click)="updatePost()">SAVE</button>
+          <button mat-button (click)="isEditing = false">CANCEL</button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <mat-card class="comment-section">
+    <mat-card-header>
+      <mat-card-title>Comments</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div *ngFor="let comment of comments" class="comment">
+        <p><strong>{{ comment.postedBy }}</strong>: {{ comment.content }}</p>
+        <small>{{ comment.createdAt | date:'short' }}</small>
+      </div>
+      
+      <mat-form-field appearance="fill" class="full-width">
+        <textarea matInput [(ngModel)]="newComment" placeholder="Add a comment"></textarea>
+      </mat-form-field>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="addComment()"
+        [disabled]="!post?.id || !newComment.trim()">
+        POST COMMENT
+        </button>
+    </mat-card-content>
+  </mat-card>
